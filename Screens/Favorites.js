@@ -1,112 +1,194 @@
 //Favorites.js
-import React, { useContext } from 'react';
-import { View, StyleSheet, Text, FlatList, Button, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useRef, useContext } from 'react';
+import { View, StyleSheet, Text, TextInput, FlatList, Button, Animated, TouchableOpacity } from 'react-native';
 import { FavoritesContext } from '../Components/FavoritesContext';
+import { ShoppingListContext } from '../Components/ShoppingListContext';
 import { MaterialIcons } from '@expo/vector-icons';
 
+const AnimatedIconButton = Animated.createAnimatedComponent(MaterialIcons);
+
 const Favorites = () => {
-    const { favoriteItems, clearFavorites } = useContext(FavoritesContext);
-    console.log('Suosikit:', favoriteItems);
+  const { favoriteItems, addToFavorite, clearFavorites, deleteFromFavorites } = useContext(FavoritesContext);
+  const { addToShoppingList } = useContext(ShoppingListContext);
+  const [text, setText] = useState('');
+  const textInputRef = useRef(null); // Ref to textInput
+  const [animation] = useState(new Animated.Value(1));
 
-    // Tyhjennetään suosikit FavoriteContextin komponentin clearFavorites-funktiolla
-    // Tätä ei tarvitse Suosikkien kanssa mutta tullaan käyttämään ostoslistan tyhjennykseen
-    // Suosikkien tyhjennys tapahtuu pelkästään valittujen tuotteiden kanssa eli teeppä se ku ehit.
-    const handleClearFavorites = () => {
-        clearFavorites();
-      };
+  const handlePressIn = () => {
+    Animated.timing(animation, {
+      toValue: 1.5,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+  };
 
-      // Lisätään tuote ostoslistalle ja ilmoitetaan käyttäjälle, että tuote lisätään ostoslistalle
-      // Tässä vaiheessa vain ilmoitetaan käyttäjälle, että tuote ei ole valmis
-    const handleAddToGroceryList = (item) => {
-        Alert.alert(item, 'lisätään joskus ostoslistalle.');
-        console.log('Lisätty ostoslistalle:', item);
-    };
+  const handlePressOut = () => {
+    Animated.timing(animation, {
+      toValue: 1,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+  };
 
-    // Poistetaan tuote suosikeista ja ilmoitetaan käyttäjälle, että tuote poistetaan suosikeista
-    // Tässä vaiheessa vain ilmoitetaan käyttäjälle, että tuote ei ole valmis
-    const handleDeleteFromFavorites = (item) => {
-        Alert.alert(item, 'Poistetaan joskus suosikeista.');
-        console.log('Poistettu suosikeista:', item);
-    };
 
-      const IconButton = ({ onPress, icon }) => (
-        <TouchableOpacity style={styles.iconButton}  onPress={onPress}>
-          {icon}
-        </TouchableOpacity>
-      );
 
-    // Lisää hakukenttä jolla voidaan etsiä tuotteita suosikeista. 
-    // Kun käyttäjä antaa ensimmäisen kirjaimen niin hakukenttä alkaa ehdottamaan tuotteita suosikeista.
+  console.log('Suosikit:', favoriteItems); // Just for testing
 
-    return (
-        <View>
-            <FlatList
-                style={styles.itemFlatlist}
-                data={favoriteItems}
-                renderItem={({ item }) => (
-                    <View style={styles.itemContainer}>
-                        <Text style={styles.itemName}>{item}</Text>
-                        <IconButton                            
-                            onPress={() => { handleAddToGroceryList(item) }}
-                            icon={<MaterialIcons name="add" size={24} color="black" />}                            
-                        />
-                        <Button title="Remove" onPress={() => {handleDeleteFromFavorites(item)}} />
-                    </View>
-                )}
-                keyExtractor={(item, index) => index.toString()}
-            />
-            <Button style={styles.deleteItem} title="Tyhjennä suosikit" onPress={handleClearFavorites} />
-        </View>
-    );
+  // Add to favorites using addToFavorite function from FavoritesContext component and clear the text input
+  const handleAddToFavorites = () => {
+    if (text.trim() !== '') {
+      addToFavorite(text);
+      console.log('Lisätty suosikiksi:', text);
+      setText('');
+    }
+  };
+
+  // Add to shopping list using the addToShoppingList function from the ShoppingListContext component
+  const handleAddToShoppingList = (item) => {
+    addToShoppingList(item);
+  };
+
+  // Delete from favorites using the deleteFromFavorites function from the FavoriteContext component
+  const handleDeleteFromFavorites = (item) => {
+    deleteFromFavorites(item);
+  };
+
+  // Clear favorites with the clearFavorites function from the FavoriteContext component
+  // This may not be needed in the final version, but it makes testing easier
+  const handleClearFavorites = () => {
+    clearFavorites();
+  };
+
+  // IconButton component for the buttons
+  const IconButton = ({ onPress, icon }) => (
+    <TouchableOpacity style={styles.iconButton} onPress={onPress}>
+      {icon}
+    </TouchableOpacity>
+  );
+
+  // TODO!!!
+  // Add a search field to search for products in favorites or add directly to favorites.
+  // When the user enters the first letter, the search field starts suggesting products from favorites.
+
+   /* 
+  // Make this code work properly
+
+  <View style={styles.itemList}>
+      <Text style={styles.itemName}>{item}</Text>
+      <TouchableOpacity
+        onPress={() => handleAddToShoppingList(item)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        <AnimatedIconButton
+          name="add"
+          size={24}
+          color="black"
+          style={{ transform: [{ scale: animation }] }}
+        />
+      </TouchableOpacity>
+      <Button title="Remove" onPress={() => handleDeleteFromFavorites(item)} />
+    </View>
+  */
+
+
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.rowContainer}>
+        <TextInput style={styles.textInput}
+          placeholder="Kirjoita tuotteen nimi"
+          value={text}
+          onChangeText={setText}
+          onSubmitEditing={handleAddToFavorites}
+          ref={textInputRef}
+          blurOnSubmit={false}
+        />
+        <IconButton
+          onPress={() => { handleAddToFavorites(text) }}
+          icon={<MaterialIcons name="favorite" size={24} color="red" />}
+        />
+      </View>
+      <View style={styles.itemContainer}>
+        {favoriteItems && favoriteItems.length > 0 ? (
+          <FlatList
+            style={styles.itemFlatlist}
+            data={favoriteItems}
+            renderItem={({ item }) => (
+              <View style={styles.itemList}>
+                <Text style={styles.itemName}>{item}</Text>
+                <IconButton
+                  onPress={() => { handleAddToShoppingList(item) }}
+                  icon={<MaterialIcons name="add" size={24} color="black" />}
+                />
+                <Button title="Remove" onPress={() => { handleDeleteFromFavorites(item) }} />
+              </View>
+            )}
+            keyExtractor={(item, index) => index.toString()}
+          />
+
+        ) : (
+          <Text>Empty favorite list</Text>
+        )}
+      </View>
+    </View>
+  );
 };
 export default Favorites;
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    itemFlatlist: {
-        padding: 5,
-        height: '94.5%',
-        backgroundColor:'#D5DBDB',
-    }, 
-    itemContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    itemName: {
-        padding: 5,
-        fontSize: 18,
-        marginTop: 5,
-        marginBottom: 5,
-        marginRight: 5,
-        flex: 1,
-        backgroundColor:'#fff',
-      },
-      iconButton: {
-        marginRight: 8,
-        marginLeft: 4,
-        padding: 5,
-        backgroundColor: 'lightgreen',
-        },
-      button: {
-          padding: 20,
-          fontSize: 15,
-          marginTop: 5,
-          marginRight: 8,
-          flex: 1,
-          backgroundColor:'#fff',
-        },
-      deleteItem: {
-          padding: 12,
-          marginTop:8,
-          borderRadius: 5,
-          borderWidth:1,
-          backgroundColor:'#D5DBDB',
-          borderColor:'#C5C7BD',
-          width: '80%'
-      },
-  });
+  container: {
+    flex: 1,
+    backgroundColor: 'fff',
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  textInput: {
+    flex: 1,
+    padding: 12,
+    margin: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: '#fff',
+    borderColor: '#C5C7BD',
+    fontSize: 18,
+  },
+  itemContainer: {
+    padding: 6,
+    height: '100%',
+    borderBottomColor: '#f7f3f2',
+  },
+  itemFlatlist: {
+    padding: 5,
+    backgroundColor: '#fff',
+  },
+  itemList: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'grey',
+  },
+  itemName: {
+    padding: 5,
+    fontSize: 18,
+    marginTop: 5,
+    marginBottom: 5,
+    marginRight: 5,
+    flex: 1,
+  },
+  iconButton: {
+    marginRight: 8,
+    marginLeft: 4,
+    padding: 6,
+  },
+  deleteItem: {
+    padding: 12,
+    marginTop: 8,
+    borderRadius: 5,
+    borderWidth: 1,
+    backgroundColor: '#D5DBDB',
+    borderColor: '#C5C7BD',
+  },
+});

@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import Favorites from './Screens/Favorites';
 import ShoppingList from './Screens/ShoppingList';
 import { FavoritesProvider } from './Components/FavoritesContext';
+import { ShoppingListProvider } from './Components/ShoppingListContext';
 import TabNavigatorIcons from './Components/TabNavigatorIcons';
 
 
@@ -20,11 +21,13 @@ export default function App() {
   return (
     <NavigationContainer>
       <FavoritesProvider>
-        <Tab.Navigator screenOptions={tabScreenOptions}>
-          <Tab.Screen name="ShoppingList" component={ShoppingList} />
-          <Tab.Screen name="Favorites" component={Favorites} />
-        </Tab.Navigator>  
+        <ShoppingListProvider>
+          <Tab.Navigator screenOptions={tabScreenOptions}>
+            <Tab.Screen name="ShoppingList" component={ShoppingList} />
+            <Tab.Screen name="Favorites" component={Favorites} />
+          </Tab.Navigator>
+        </ShoppingListProvider>
       </FavoritesProvider>
-    </NavigationContainer>
+    </NavigationContainer >
   );
 }

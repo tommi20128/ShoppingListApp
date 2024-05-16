@@ -9,9 +9,10 @@ const ShoppingList = () => {
   const { addToFavorite } = useContext(FavoritesContext);
   const { shoppingListItems, addToShoppingList, deleteFromShoppingList, clearShoppingList } = useContext(ShoppingListContext);
   const [text, setText] = useState('');
-  const textInputRef = useRef(null); // Ref textInputille
+  const textInputRef = useRef(null);
 
   // Add to favorites using addToFavorite function from FavoritesContext component and clear the text input
+  // This may not be necessary in this component, but it is here for testing purposes
   const handleAddToFavorites = () => {
     if (text.trim() !== '') {
       addToFavorite(text);
@@ -46,20 +47,24 @@ const ShoppingList = () => {
     </TouchableOpacity>
   );
 
+  //TODO:
+  // When product is not on favorites, change the color of the favorite icon to white
+  // When product is on favorites, change the color of the favorite icon to red
+  // User should be able to change products order in the shopping list by dragging and dropping them
+  // Change alert to notification if product is already on the favorites or shopping list
+
+
+
   return (
     <View style={styles.container}>
       <View style={styles.rowContainer}>
         <TextInput style={styles.textInput}
-          placeholder="Kirjoita tuotteen nimi"
+          placeholder="Write here..."
           value={text}
           onChangeText={setText}
           onSubmitEditing={handleAddToShoppingList}
           ref={textInputRef}
           blurOnSubmit={false}
-        />
-        <IconButton
-          onPress={() => { handleAddToFavorites(text) }}
-          icon={<MaterialIcons name="favorite" size={24} color="red" />}
         />
       </View>
       <View style={styles.itemContainer}>
@@ -83,11 +88,11 @@ const ShoppingList = () => {
             keyExtractor={(item, index) => index.toString()}
           />
         ) : (
-          <Text>Empty shopping list</Text>
+          <Text style={{ fontSize: 18 }}>Shopping list is empty</Text>
         )}
       </View>
       <View style={styles.clearButtonContainer}>
-        <Button title="Tyhjennä ostoslista" onPress={handleClearShoppingList} />
+        <Button title="Clear Shopping list" onPress={handleClearShoppingList} />
       </View>
     </View>
   );

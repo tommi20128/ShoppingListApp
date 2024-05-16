@@ -1,38 +1,45 @@
 //Favorites.js
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { View, StyleSheet, Text, TextInput, FlatList, Button, Animated, TouchableOpacity } from 'react-native';
 import { FavoritesContext } from '../Components/FavoritesContext';
 import { ShoppingListContext } from '../Components/ShoppingListContext';
 import { MaterialIcons } from '@expo/vector-icons';
-
-const AnimatedIconButton = Animated.createAnimatedComponent(MaterialIcons);
 
 const Favorites = () => {
   const { favoriteItems, addToFavorite, clearFavorites, deleteFromFavorites } = useContext(FavoritesContext);
   const { addToShoppingList } = useContext(ShoppingListContext);
   const [text, setText] = useState('');
   const textInputRef = useRef(null); // Ref to textInput
-  const [animation] = useState(new Animated.Value(1));
+  const [notification, setNotification] = useState('');
+  const [animation] = useState(new Animated.Value(0));
+  const animationRef = useRef(null);
+  
+  // Animation for notification
+  useEffect(() => {
+    if (notification) {
+      if (animationRef.current) {
+        animationRef.current.stop();
+        animation.setValue(0);
+      } 
+      animationRef.current = Animated.timing(animation, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      });
 
-  const handlePressIn = () => {
-    Animated.timing(animation, {
-      toValue: 1.5,
-      duration: 100,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.timing(animation, {
-      toValue: 1,
-      duration: 100,
-      useNativeDriver: true,
-    }).start();
-  };
+      animationRef.current.start(() => {
+        setTimeout(() => {
+          if (animationRef.current) {
+            animationRef.current.stop();
+          }
+          setNotification('');
+        }, 500);
+      });
+    }
+  }, [notification]);
 
 
-
-  console.log('Suosikit:', favoriteItems); // Just for testing
+  console.log('Favorite List:', favoriteItems); // Just for testing
 
   // Add to favorites using addToFavorite function from FavoritesContext component and clear the text input
   const handleAddToFavorites = () => {
@@ -46,6 +53,7 @@ const Favorites = () => {
   // Add to shopping list using the addToShoppingList function from the ShoppingListContext component
   const handleAddToShoppingList = (item) => {
     addToShoppingList(item);
+    setNotification(`${item} added to shopping list`);
   };
 
   // Delete from favorites using the deleteFromFavorites function from the FavoriteContext component
@@ -65,48 +73,25 @@ const Favorites = () => {
       {icon}
     </TouchableOpacity>
   );
-
+  
   // TODO!!!
   // Add a search field to search for products in favorites or add directly to favorites.
   // When the user enters the first letter, the search field starts suggesting products from favorites.
-
-   /* 
-  // Make this code work properly
-
-  <View style={styles.itemList}>
-      <Text style={styles.itemName}>{item}</Text>
-      <TouchableOpacity
-        onPress={() => handleAddToShoppingList(item)}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-      >
-        <AnimatedIconButton
-          name="add"
-          size={24}
-          color="black"
-          style={{ transform: [{ scale: animation }] }}
-        />
-      </TouchableOpacity>
-      <Button title="Remove" onPress={() => handleDeleteFromFavorites(item)} />
-    </View>
-  */
-
-
-
+  // Change alert to animation notification when item is already in shopping list
+  // User should be able to change products order in the favorites list by dragging and dropping them
+  // Add button that changes the order of the products in the favorites list to alphabetical order, ascending or descending and back to the original order
+  // Add button "Clear Favorites" somewhere safe place to user won't accidentally press it
+   
   return (
     <View style={styles.container}>
       <View style={styles.rowContainer}>
         <TextInput style={styles.textInput}
-          placeholder="Kirjoita tuotteen nimi"
+          placeholder="Write here..."
           value={text}
           onChangeText={setText}
           onSubmitEditing={handleAddToFavorites}
           ref={textInputRef}
           blurOnSubmit={false}
-        />
-        <IconButton
-          onPress={() => { handleAddToFavorites(text) }}
-          icon={<MaterialIcons name="favorite" size={24} color="red" />}
         />
       </View>
       <View style={styles.itemContainer}>
@@ -126,11 +111,34 @@ const Favorites = () => {
             )}
             keyExtractor={(item, index) => index.toString()}
           />
-
         ) : (
-          <Text>Empty favorite list</Text>
+          <Text style={{ fontSize: 18 }}>Favorite list is empty</Text>
         )}
       </View>
+
+      
+      {notification ? (
+        <Animated.View
+          style={[
+            styles.notificationContainer,
+            {
+              opacity: animation,
+              transform: [
+                {
+                  translateY: animation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [100, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <Text style={styles.notificationText}>{notification}</Text>
+        </Animated.View>
+      ) : null}
+      
+
     </View>
   );
 };
@@ -157,7 +165,7 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     padding: 6,
-    height: '100%',
+    height: '89%',
     borderBottomColor: '#f7f3f2',
   },
   itemFlatlist: {
@@ -190,5 +198,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: '#D5DBDB',
     borderColor: '#C5C7BD',
+  },
+  notificationContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    padding: 10,
+    alignItems: 'center',
+  },
+  notificationText: {
+    color: 'black',
+    fontSize: 18,
   },
 });

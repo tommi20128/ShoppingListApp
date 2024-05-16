@@ -1,6 +1,6 @@
 // ItemlistContext.js
 // Later in the project, I will save the data to the phone's memory.
-// Right now this is just a placeholder for the future. :|
+// Right now this is not working at all but it is just a placeholder for the future. :|
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
